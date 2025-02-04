@@ -1,1 +1,234 @@
-Hello, this is Josh's website.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purely Wordle Leaderboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            width: 80%;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        .input-group label {
+            display: inline-block;
+            width: 150px;
+        }
+        .input-group input {
+            width: calc(100% - 150px);
+            padding: 8px;
+            border: 1px solid #ccc;
+        }
+        .input-group button {
+            padding: 10px 20px;
+            background-color: #4682b4;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .input-group button:hover {
+            background-color: #5a9bd6;
+        }
+        #output {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .leaderboard-img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Wordle Leaderboard</h1>
+        <div class="input-group">
+            <label for="fileInput">Choose File:</label>
+            <input type="file" id="fileInput" accept=".txt">
+        </div>
+        <div class="input-group">
+            <label for="startDate">Start Date (dd/MM/yyyy):</label>
+            <input type="text" id="startDate" value="31/01/2025">
+        </div>
+        <div class="input-group">
+            <label for="endDate">End Date (dd/MM/yyyy):</label>
+            <input type="text" id="endDate" value="31/12/2025">
+        </div>
+        <div class="input-group">
+            <button id="generateButton">Generate Leaderboard</button>
+        </div>
+        <div id="output">
+            <p>Leaderboard will be shown here.</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('generateButton').addEventListener('click', function() {
+            const fileInput = document.getElementById('fileInput');
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (fileInput.files.length === 0) {
+                alert('Please choose a file.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const messages = parseMessages(text);
+                const filteredMessages = filterMessagesByDate(messages, startDate, endDate);
+
+                const scores = calculateScores(filteredMessages);
+                const leaderboard = calculateLeaderboard(scores);
+
+                generateLeaderboardImage(leaderboard, scores);
+            };
+
+            reader.readAsText(file);
+        });
+
+        function parseMessages(text) {
+            const lines = text.split('\n');
+            const messages = [];
+            const pattern = /(\d{2}\/\d{2}\/\d{4}),?\s*(\d{2}:\d{2})\s*-\s*(.*)/;
+            const wordlePattern = /(.+?):\s*Wordle (\d{1,4},?\d{0,3})/;
+
+            lines.forEach(line => {
+                const match = line.match(pattern);
+                if (match) {
+                    const date = match[1];
+                    const time = match[2];
+                    const content = match[3];
+                    const wordleIdMatch = content.match(wordlePattern);
+
+                    if (wordleIdMatch) {
+                        const playerName = wordleIdMatch[1].trim();
+                        const wordleId = wordleIdMatch[2];
+                        messages.push({ date, time, content, playerName, wordleId });
+                    }
+                }
+            });
+
+            return messages;
+        }
+
+        function filterMessagesByDate(messages, startDate, endDate) {
+            const start = new Date(startDate.split('/').reverse().join('-'));
+            const end = new Date(endDate.split('/').reverse().join('-'));
+
+            return messages.filter(message => {
+                const messageDate = new Date(message.date.split('/').reverse().join('-'));
+                return messageDate >= start && messageDate <= end;
+            });
+        }
+
+        function calculateScores(messages) {
+            const scores = {};
+
+            messages.forEach(message => {
+                const playerName = message.playerName;
+                const content = message.content;
+
+                if (!scores[playerName]) {
+                    scores[playerName] = { '1/6': 0, '2/6': 0, '3/6': 0, '4/6': 0, '5/6': 0, '6/6': 0 };
+                }
+
+                if (content.includes('1/6')) scores[playerName]['1/6']++;
+                if (content.includes('2/6')) scores[playerName]['2/6']++;
+                if (content.includes('3/6')) scores[playerName]['3/6']++;
+                if (content.includes('4/6')) scores[playerName]['4/6']++;
+                if (content.includes('5/6')) scores[playerName]['5/6']++;
+                if (content.includes('6/6')) scores[playerName]['6/6']++;
+            });
+
+            return scores;
+        }
+
+        function calculateLeaderboard(scores) {
+            const leaderboard = {};
+
+            for (const player in scores) {
+                const playerScores = scores[player];
+                let total = 0;
+
+                total += playerScores['1/6'] * 10;
+                total += playerScores['2/6'] * 8;
+                total += playerScores['3/6'] * 6;
+                total += playerScores['4/6'] * 4;
+                total += playerScores['5/6'] * 2;
+
+                leaderboard[player] = total;
+            }
+
+            return Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
+        }
+
+        function generateLeaderboardImage(leaderboard, scores) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const fontSize = 14;
+            const lineHeight = fontSize + 4;
+            const padding = 20;
+
+            const imageWidth = 800;
+            const imageHeight = padding * 2 + (leaderboard.length + 1) * lineHeight;
+
+            canvas.width = imageWidth;
+            canvas.height = imageHeight;
+
+            context.fillStyle = '#f0f0f0';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.font = `${fontSize}px Arial`;
+            context.fillStyle = '#000';
+
+            context.fillText('Player', padding, padding + fontSize);
+            context.fillText('Score', padding + 150, padding + fontSize);
+            context.fillText('Attempts', padding + 250, padding + fontSize);
+
+            for (let i = 1; i <= 6; i++) {
+                context.fillText(`${i}/6`, padding + 350 + (i - 1) * 50, padding + fontSize);
+            }
+
+            leaderboard.forEach((entry, index) => {
+                const playerName = entry[0];
+                const totalScore = entry[1];
+                const playerScores = scores[playerName];
+                const attempts = Object.values(playerScores).reduce((a, b) => a + b, 0);
+
+                const y = padding + (index + 1) * lineHeight;
+
+                context.fillText(playerName, padding, y + fontSize);
+                context.fillText(totalScore, padding + 150, y + fontSize);
+                context.fillText(attempts, padding + 250, y + fontSize);
+
+                for (let i = 1; i <= 6; i++) {
+                    context.fillText(playerScores[`${i}/6`] || 0, padding + 350 + (i - 1) * 50, y + fontSize);
+                }
+            });
+
+            const output = document.getElementById('output');
+            output.innerHTML = '';
+            const img = new Image();
+            img.src = canvas.toDataURL();
+            img.className = 'leaderboard-img';
+            output.appendChild(img);
+        }
+    </script>
+</body>
+</html>
