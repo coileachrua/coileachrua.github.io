@@ -18,8 +18,8 @@
             background-color: #e0f7fa; /* Light blue background */
         }
         .container {
-            width: 90%;
-            max-width: 1200px;
+            width: 100%;
+            max-width: 800px; /* Reduced the max-width */
             margin: 20px auto;
             background-color: #ffffff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -106,7 +106,9 @@
             text-align: left;
         }
         canvas {
-            display: none; /* Hide the canvas element */
+            width: 100% !important; /* Ensure canvas takes full width */
+            height: auto !important; /* Maintain aspect ratio */
+            max-height: 400px; /* Set a max height for the canvas */
         }
     </style>
     <!-- Include Chart.js library -->
@@ -384,12 +386,17 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false, // Ensure responsiveness
                     scales: {
                         x: {
                             title: {
                                 display: true,
                                 text: 'Date'
+                            },
+                            ticks: {
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 10 // Adjust this value as needed
                             }
                         },
                         y: {
