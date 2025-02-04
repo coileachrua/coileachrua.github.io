@@ -13,12 +13,16 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #f5f5f5;
+            background-color: #e0f7fa; /* Light blue background */
         }
         .container {
             width: 80%;
             max-width: 1200px;
             margin: 20px auto;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 20px;
         }
         .input-group {
             margin-bottom: 10px;
@@ -31,30 +35,38 @@
             width: calc(100% - 150px);
             padding: 8px;
             border: 1px solid #ccc;
+            border-radius: 5px;
         }
         .input-group button {
             padding: 10px 20px;
             background-color: #4682b4;
             color: white;
             border: none;
+            border-radius: 5px;
             cursor: pointer;
         }
         .input-group button:hover {
             background-color: #5a9bd6;
         }
-        #output {
+        #output, #chartContainer {
             margin-top: 20px;
             text-align: center;
         }
         .leaderboard-img {
             max-width: 100%;
             height: auto;
+            border-radius: 10px;
+        }
+        h1 {
+            color: #00796b; /* Dark teal color for the title */
         }
     </style>
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Wordle Leaderboard</h1>
+        <h1>Purely Wordle Leaderboard</h1>
         <div class="input-group">
             <label for="fileInput">Choose File:</label>
             <input type="file" id="fileInput" accept=".txt">
@@ -72,6 +84,9 @@
         </div>
         <div id="output">
             <p>Leaderboard will be shown here.</p>
+        </div>
+        <div id="chartContainer">
+            <canvas id="scoreChart"></canvas>
         </div>
     </div>
 
@@ -98,6 +113,7 @@
                 const leaderboard = calculateLeaderboard(scores);
 
                 generateLeaderboardImage(leaderboard, scores);
+                generateScoreChart(filteredMessages);
             };
 
             reader.readAsText(file);
@@ -228,6 +244,92 @@
             img.src = canvas.toDataURL();
             img.className = 'leaderboard-img';
             output.appendChild(img);
+        }
+
+        function generateScoreChart(messages) {
+            const scoresByPlayer = {};
+            const players = new Set();
+
+            // Initialize scoresByPlayer
+            messages.forEach(message => {
+                const date = message.date;
+                const playerName = message.playerName;
+                players.add(playerName);
+
+                if (!scoresByPlayer[playerName]) {
+                    scoresByPlayer[playerName] = [];
+                }
+                scoresByPlayer[playerName].push({ date, content: message.content });
+            });
+
+            // Sort messages by date and calculate running total score
+            for (const player in scoresByPlayer) {
+                scoresByPlayer[player].sort((a, b) => new Date(a.date.split('/').reverse().join('-')) - new Date(b.date.split('/').reverse().join('-')));
+                let runningTotal = 0;
+                scoresByPlayer[player] = scoresByPlayer[player].map(entry => {
+                    const content = entry.content;
+                    if (content.includes('1/6')) runningTotal += 10;
+                    if (content.includes('2/6')) runningTotal += 8;
+                    if (content.includes('3/6')) runningTotal += 6;
+                    if (content.includes('4/6')) runningTotal += 4;
+                    if (content.includes('5/6')) runningTotal += 2;
+                    if (content.includes('6/6')) runningTotal += 1;
+                    return { date: entry.date, score: runningTotal };
+                });
+            }
+
+            const sortedDates = Array.from(new Set(messages.map(message => message.date))).sort((a, b) => new Date(a.split('/').reverse().join('-')) - new Date(b.split('/').reverse().join('-')));
+            const datasets = [];
+
+            players.forEach(player => {
+                const data = sortedDates.map(date => {
+                    const scoreEntry = scoresByPlayer[player].find(entry => entry.date === date);
+                    return scoreEntry ? scoreEntry.score : null;
+                });
+
+                datasets.push({
+                    label: player,
+                    data: data,
+                    fill: false,
+                    borderColor: getRandomColor(),
+                    tension: 0.1
+                });
+            });
+
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Score'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
         }
     </script>
 </body>
