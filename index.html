@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Purely Wordle Leaderboard</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap');
+
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -37,6 +39,10 @@
         .header h1 {
             margin: 0;
             color: #00796b; /* Dark teal color for the title */
+            font-family: 'Roboto', sans-serif;
+            font-size: 2.5em;
+            padding: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
         .input-group {
             margin-bottom: 10px;
@@ -72,11 +78,32 @@
             height: auto;
             border-radius: 10px;
         }
+        .accordion {
+            background-color: #f1f1f1;
+            color: #444;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+            transition: 0.4s;
+            margin-top: 20px;
+        }
+        .accordion.active, .accordion:hover {
+            background-color: #ccc;
+        }
+        .panel {
+            padding: 0 18px;
+            display: none;
+            background-color: white;
+            overflow: hidden;
+        }
         .instructions {
             font-size: 0.8em;
             color: #555;
-            text-align: center;
-            margin-top: 20px;
+            text-align: left;
         }
         canvas {
             display: none; /* Hide the canvas element */
@@ -89,7 +116,7 @@
     <div class="container">
         <div class="header">
             <h1>Purely Wordle Leaderboard</h1>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c5/Wordle_Logo.svg" alt="">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c5/Wordle_Logo.svg" alt="Wordle Logo"> 
         </div>
         <div class="input-group">
             <label for="fileInput">Choose File:</label>
@@ -112,16 +139,19 @@
         <div id="chartContainer">
             <canvas id="scoreChart"></canvas>
         </div>
-        <div class="instructions">
-            <p>To export a WhatsApp chat:</p>
-            <ol>
-                <li>Open the chat in WhatsApp.</li>
-                <li>Tap on the contact or group name at the top.</li>
-                <li>Scroll down and select "Export Chat".</li>
-                <li>Choose "Without Media" and select a method to send the chat (e.g., email).</li>
-                <li>Save the exported chat file as a .txt file.</li>
-                <li>Upload the .txt file using the "Choose File" button above.</li>
-            </ol>
+        <button class="accordion">Instructions</button>
+        <div class="panel">
+            <div class="instructions">
+                <p>To export a WhatsApp chat:</p>
+                <ol>
+                    <li>Open the chat in WhatsApp.</li>
+                    <li>Tap on the contact or group name at the top.</li>
+                    <li>Scroll down and select "Export Chat".</li>
+                    <li>Choose "Without Media" and select a method to send the chat (e.g., email).</li>
+                    <li>Save the exported chat file as a .txt file.</li>
+                    <li>Upload the .txt file using the "Choose File" button above.</li>
+                </ol>
+            </div>
         </div>
     </div>
 
@@ -393,6 +423,20 @@
                 color += letters[Math.floor(Math.random() * 16)];
             }
             return color;
+        }
+
+        // Accordion functionality
+        const acc = document.getElementsByClassName("accordion");
+        for (let i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                const panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                }
+            });
         }
     </script>
 </body>
