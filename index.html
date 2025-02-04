@@ -11,18 +11,32 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             background-color: #e0f7fa; /* Light blue background */
         }
         .container {
-            width: 80%;
+            width: 90%;
             max-width: 1200px;
             margin: 20px auto;
             background-color: #ffffff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             padding: 20px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .header img {
+            max-height: 50px;
+            margin-left: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #00796b; /* Dark teal color for the title */
         }
         .input-group {
             margin-bottom: 10px;
@@ -51,14 +65,21 @@
         #output, #chartContainer {
             margin-top: 20px;
             text-align: center;
+            width: 100%;
         }
-        .leaderboard-img {
+        .leaderboard-img, .chart-img {
             max-width: 100%;
             height: auto;
             border-radius: 10px;
         }
-        h1 {
-            color: #00796b; /* Dark teal color for the title */
+        .instructions {
+            font-size: 0.8em;
+            color: #555;
+            text-align: center;
+            margin-top: 20px;
+        }
+        canvas {
+            display: none; /* Hide the canvas element */
         }
     </style>
     <!-- Include Chart.js library -->
@@ -66,7 +87,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>Purely Wordle Leaderboard</h1>
+        <div class="header">
+            <h1>Purely Wordle Leaderboard</h1>
+            <img src="https://www.nytimes.com/games-assets/v2/wordle/wordle-96x96.png" alt="Wordle Logo">
+        </div>
         <div class="input-group">
             <label for="fileInput">Choose File:</label>
             <input type="file" id="fileInput" accept=".txt">
@@ -87,6 +111,17 @@
         </div>
         <div id="chartContainer">
             <canvas id="scoreChart"></canvas>
+        </div>
+        <div class="instructions">
+            <p>To export a WhatsApp chat:</p>
+            <ol>
+                <li>Open the chat in WhatsApp.</li>
+                <li>Tap on the contact or group name at the top.</li>
+                <li>Scroll down and select "Export Chat".</li>
+                <li>Choose "Without Media" and select a method to send the chat (e.g., email).</li>
+                <li>Save the exported chat file as a .txt file.</li>
+                <li>Upload the .txt file using the "Choose File" button above.</li>
+            </ol>
         </div>
     </div>
 
@@ -311,7 +346,7 @@
             });
 
             const ctx = document.getElementById('scoreChart').getContext('2d');
-            new Chart(ctx, {
+            const chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: sortedDates,
@@ -319,6 +354,7 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: true,
                     scales: {
                         x: {
                             title: {
@@ -335,6 +371,19 @@
                     }
                 }
             });
+
+            // Convert chart to image and display it
+            chart.options.animation = {
+                onComplete: function() {
+                    const chartContainer = document.getElementById('chartContainer');
+                    chartContainer.innerHTML = '';
+                    const img = new Image();
+                    img.src = chart.toBase64Image();
+                    img.className = 'chart-img';
+                    chartContainer.appendChild(img);
+                }
+            };
+            chart.update();
         }
 
         function getRandomColor() {
