@@ -109,11 +109,12 @@
                 const messages = parseMessages(text);
                 const filteredMessages = filterMessagesByDate(messages, startDate, endDate);
 
-                const scores = calculateScores(filteredMessages);
+                const earliestMessages = getEarliestMessages(filteredMessages);
+                const scores = calculateScores(earliestMessages);
                 const leaderboard = calculateLeaderboard(scores);
 
                 generateLeaderboardImage(leaderboard, scores);
-                generateScoreChart(filteredMessages);
+                generateScoreChart(earliestMessages);
             };
 
             reader.readAsText(file);
@@ -152,6 +153,19 @@
                 const messageDate = new Date(message.date.split('/').reverse().join('-'));
                 return messageDate >= start && messageDate <= end;
             });
+        }
+
+        function getEarliestMessages(messages) {
+            const earliestMessages = {};
+
+            messages.forEach(message => {
+                const key = `${message.date}_${message.playerName}`;
+                if (!earliestMessages[key] || message.time < earliestMessages[key].time) {
+                    earliestMessages[key] = message;
+                }
+            });
+
+            return Object.values(earliestMessages);
         }
 
         function calculateScores(messages) {
