@@ -123,31 +123,40 @@
         <select id="appSelect">
             <option value="wordle">Wordle Leaderboard</option>
             <option value="converter">Unit Converter</option>
-            <option value="savings">Savings Planner</option>
+            <option value="financial">Financial Planner</option>
         </select>
     </div>
 
-    <div class="container hidden" id="savingsApp">
+    <div class="container hidden" id="financialApp">
         <div class="header">
-            <h1>Savings Planner</h1>
+            <h1>Financial Planner</h1>
         </div>
         <div class="input-group">
-            <label for="goalInput">Goal Amount:</label>
-            <input type="number" id="goalInput">
+            <label for="goalName">Goal Name:</label>
+            <input type="text" id="goalName" placeholder="e.g., Wedding">
         </div>
         <div class="input-group">
-            <label for="incomeInput">Monthly Income:</label>
-            <input type="number" id="incomeInput">
+            <label for="goalAmount">Goal Amount:</label>
+            <input type="number" id="goalAmount">
         </div>
         <div class="input-group">
-            <label for="expenseInput">Monthly Expenses:</label>
-            <input type="number" id="expenseInput">
+            <label for="goalMonths">Months to Goal:</label>
+            <input type="number" id="goalMonths" value="1">
         </div>
+
+        <h3>Income</h3>
+        <div id="incomeList"></div>
+        <button id="addIncomeBtn">Add Income</button>
+
+        <h3>Expenses</h3>
+        <div id="expenseList"></div>
+        <button id="addExpenseBtn">Add Expense</button>
+
         <div class="input-group">
-            <button id="calcSavingsBtn">Calculate</button>
+            <button id="calcPlanBtn">Run Analysis</button>
         </div>
-        <div id="savingsOutput">
-            <p>Enter your details to see how long it will take to hit your goal.</p>
+        <div id="planOutput">
+            <p>Enter your details and run analysis.</p>
         </div>
     </div>
 
@@ -511,8 +520,7 @@
             const app = this.value;
             document.getElementById('wordleApp').classList.toggle('hidden', app !== 'wordle');
             document.getElementById('converterApp').classList.toggle('hidden', app !== 'converter');
-
-            document.getElementById('savingsApp').classList.toggle('hidden', app !== 'savings');
+            document.getElementById('financialApp').classList.toggle('hidden', app !== 'financial');
 
         });
 
@@ -539,20 +547,83 @@
         });
 
 
-        // Savings planner calculation
-        document.getElementById('calcSavingsBtn').addEventListener('click', function() {
-            const goal = parseFloat(document.getElementById('goalInput').value);
-            const income = parseFloat(document.getElementById('incomeInput').value);
-            const expense = parseFloat(document.getElementById('expenseInput').value);
-            if (isNaN(goal) || isNaN(income) || isNaN(expense)) return;
-            const monthly = income - expense;
-            const output = document.getElementById('savingsOutput');
-            if (monthly <= 0) {
-                output.innerText = 'Expenses exceed income. Adjust values.';
-                return;
+        // Financial planner functionality
+        document.getElementById('addIncomeBtn').addEventListener('click', function() {
+            const div = document.createElement('div');
+            div.className = 'input-group income-row';
+            div.innerHTML = '<input type="text" placeholder="Name" class="income-name"> ' +
+                            '<input type="number" placeholder="Monthly Income" class="income-value"> ' +
+                            '<input type="number" placeholder="Saved" class="income-saved" value="0">';
+            document.getElementById('incomeList').appendChild(div);
+        });
+
+        document.getElementById('addExpenseBtn').addEventListener('click', function() {
+            const div = document.createElement('div');
+            div.className = 'input-group expense-row';
+            div.innerHTML = '<input type="text" placeholder="Category" class="expense-name"> ' +
+                            '<input type="number" placeholder="Monthly Amount" class="expense-value">';
+            document.getElementById('expenseList').appendChild(div);
+        });
+
+        document.getElementById('calcPlanBtn').addEventListener('click', function() {
+            const goalName = document.getElementById('goalName').value.trim();
+            const goalAmount = parseFloat(document.getElementById('goalAmount').value);
+            const goalMonths = parseInt(document.getElementById('goalMonths').value);
+            if (!goalName || isNaN(goalAmount) || isNaN(goalMonths) || goalMonths <= 0) return;
+
+            let totalIncome = 0;
+            let totalSaved = 0;
+            document.querySelectorAll('#incomeList .income-row').forEach(row => {
+                const inc = parseFloat(row.querySelector('.income-value').value) || 0;
+                const saved = parseFloat(row.querySelector('.income-saved').value) || 0;
+                totalIncome += inc;
+                totalSaved += saved;
+            });
+
+            let totalExpense = 0;
+            document.querySelectorAll('#expenseList .expense-row').forEach(row => {
+                const amt = parseFloat(row.querySelector('.expense-value').value) || 0;
+                totalExpense += amt;
+            });
+
+            const remainingBalance = totalIncome - totalExpense;
+            const nf = new Intl.NumberFormat('en-GB', {style: 'currency', currency: 'GBP'});
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric'});
+            const lines = [];
+            lines.push(`Savings Goal Analysis: “${goalName}” (${nf.format(goalAmount)} in ${goalMonths} months)`);
+            lines.push(`Date run: ${dateStr}`);
+            lines.push('');
+            lines.push(`1) Total income (all users): ${nf.format(totalIncome)}`);
+            lines.push(`2) Total expenses (all categories): ${nf.format(totalExpense)}`);
+            lines.push(`3) Remaining balance (1 − 2): ${nf.format(remainingBalance)}`);
+            lines.push('');
+            lines.push('4) 50/30/20 rule suggestion:');
+            lines.push(`   • Needs (50%): ${nf.format(totalIncome * 0.5)}`);
+            lines.push(`   • Wants (30%): ${nf.format(totalIncome * 0.3)}`);
+            lines.push(`   • Savings (20%): ${nf.format(totalIncome * 0.2)}`);
+            lines.push('');
+            lines.push(`5) Total already saved (all users): ${nf.format(totalSaved)}`);
+            const remainingToSave = goalAmount - totalSaved;
+            lines.push(`6) Remaining to save (${goalAmount.toFixed(2)} − ${totalSaved.toFixed(2)}): ${nf.format(remainingToSave)}`);
+            const monthlyRequired = remainingToSave / goalMonths;
+            lines.push(`7) Monthly savings required (6 ÷ ${goalMonths}): ${nf.format(monthlyRequired)}`);
+            lines.push('');
+            if (monthlyRequired > remainingBalance) {
+                lines.push(`→ ${nf.format(monthlyRequired)} > ${nf.format(remainingBalance)}, so goal is not achievable.`);
+            } else {
+                lines.push(`→ ${nf.format(monthlyRequired)} ≤ ${nf.format(remainingBalance)}, goal is achievable.`);
             }
-            const months = Math.ceil(goal / monthly);
-            output.innerText = `At $${monthly.toFixed(2)} saved per month, you'll reach your goal in ${months} months.`;
+            lines.push('');
+            lines.push(`   • At most, you can save ${nf.format(remainingBalance)} per month.`);
+            const monthsAtBalance = remainingToSave / remainingBalance;
+            lines.push(`   • To save ${nf.format(goalAmount)} at ${nf.format(remainingBalance)}/month takes ${monthsAtBalance.toFixed(2)} → ${Math.ceil(monthsAtBalance)} months.`);
+            const endBalanceDate = new Date(today); endBalanceDate.setMonth(endBalanceDate.getMonth() + Math.ceil(monthsAtBalance));
+            lines.push(`   • At ${nf.format(remainingBalance)}/month, you’ll hit ${nf.format(goalAmount)} on: ${endBalanceDate.toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric'})}`);
+            const monthsAt20 = remainingToSave / (totalIncome * 0.2);
+            const end20Date = new Date(today); end20Date.setMonth(end20Date.getMonth() + Math.ceil(monthsAt20));
+            lines.push(`   • Saving the 20% amount (${nf.format(totalIncome * 0.2)}) hits ${nf.format(goalAmount)} on: ${end20Date.toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric'})}`);
+            document.getElementById('planOutput').innerText = lines.join('\n');
         });
 
     </script>
