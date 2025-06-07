@@ -151,6 +151,9 @@
         </div>
     </div>
 
+        </select>
+    </div>
+
     <div class="container hidden" id="converterApp">
         <div class="header">
             <h1>Unit Converter</h1>
@@ -510,7 +513,9 @@
             const app = this.value;
             document.getElementById('wordleApp').classList.toggle('hidden', app !== 'wordle');
             document.getElementById('converterApp').classList.toggle('hidden', app !== 'converter');
+
             document.getElementById('savingsApp').classList.toggle('hidden', app !== 'savings');
+
         });
 
         // Converter functions
@@ -535,6 +540,7 @@
             document.getElementById('converterOutput').innerText = `${val} kg = ${result.toFixed(2)} stone`;
         });
 
+
         // Savings planner calculation
         document.getElementById('calcSavingsBtn').addEventListener('click', function() {
             const goal = parseFloat(document.getElementById('goalInput').value);
@@ -550,6 +556,7 @@
             const months = Math.ceil(goal / monthly);
             output.innerText = `At $${monthly.toFixed(2)} saved per month, you'll reach your goal in ${months} months.`;
         });
+
     </script>
 </body>
 </html>
