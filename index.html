@@ -100,6 +100,9 @@
             background-color: white;
             overflow: hidden;
         }
+        .hidden {
+            display: none;
+        }
         .instructions {
             font-size: 0.8em;
             color: #555;
@@ -115,7 +118,38 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="input-group">
+        <label for="appSelect">Choose App:</label>
+        <select id="appSelect">
+            <option value="wordle">Wordle Leaderboard</option>
+            <option value="converter">Unit Converter</option>
+        </select>
+    </div>
+
+    <div class="container hidden" id="converterApp">
+        <div class="header">
+            <h1>Unit Converter</h1>
+        </div>
+        <div class="input-group">
+            <label for="inchesInput">Inches to cm:</label>
+            <input type="number" id="inchesInput">
+            <button id="inToCmBtn">Convert</button>
+        </div>
+        <div class="input-group">
+            <label for="milesInput">Miles to km:</label>
+            <input type="number" id="milesInput">
+            <button id="miToKmBtn">Convert</button>
+        </div>
+        <div class="input-group">
+            <label for="kgInput">Kg to stone:</label>
+            <input type="number" id="kgInput">
+            <button id="kgToStBtn">Convert</button>
+        </div>
+        <div id="converterOutput">
+            <p>Results will appear here.</p>
+        </div>
+    </div>
+    <div class="container" id="wordleApp">
         <div class="header">
             <h1>Purely Wordle Leaderboard</h1>
             <img src="https://upload.wikimedia.org/wikipedia/commons/c/c5/Wordle_Logo.svg" alt="Wordle Logo"> 
@@ -445,6 +479,35 @@
                 }
             });
         }
+
+        // App selector functionality
+        document.getElementById('appSelect').addEventListener('change', function() {
+            const app = this.value;
+            document.getElementById('wordleApp').classList.toggle('hidden', app !== 'wordle');
+            document.getElementById('converterApp').classList.toggle('hidden', app !== 'converter');
+        });
+
+        // Converter functions
+        document.getElementById('inToCmBtn').addEventListener('click', function() {
+            const val = parseFloat(document.getElementById('inchesInput').value);
+            if (isNaN(val)) return;
+            const result = val * 2.54;
+            document.getElementById('converterOutput').innerText = `${val} inches = ${result.toFixed(2)} cm`;
+        });
+
+        document.getElementById('miToKmBtn').addEventListener('click', function() {
+            const val = parseFloat(document.getElementById('milesInput').value);
+            if (isNaN(val)) return;
+            const result = val * 1.60934;
+            document.getElementById('converterOutput').innerText = `${val} miles = ${result.toFixed(2)} km`;
+        });
+
+        document.getElementById('kgToStBtn').addEventListener('click', function() {
+            const val = parseFloat(document.getElementById('kgInput').value);
+            if (isNaN(val)) return;
+            const result = val * 0.157473;
+            document.getElementById('converterOutput').innerText = `${val} kg = ${result.toFixed(2)} stone`;
+        });
     </script>
 </body>
 </html>
