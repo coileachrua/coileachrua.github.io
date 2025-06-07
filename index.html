@@ -123,7 +123,32 @@
         <select id="appSelect">
             <option value="wordle">Wordle Leaderboard</option>
             <option value="converter">Unit Converter</option>
+            <option value="savings">Savings Planner</option>
         </select>
+    </div>
+
+    <div class="container hidden" id="savingsApp">
+        <div class="header">
+            <h1>Savings Planner</h1>
+        </div>
+        <div class="input-group">
+            <label for="goalInput">Goal Amount:</label>
+            <input type="number" id="goalInput">
+        </div>
+        <div class="input-group">
+            <label for="incomeInput">Monthly Income:</label>
+            <input type="number" id="incomeInput">
+        </div>
+        <div class="input-group">
+            <label for="expenseInput">Monthly Expenses:</label>
+            <input type="number" id="expenseInput">
+        </div>
+        <div class="input-group">
+            <button id="calcSavingsBtn">Calculate</button>
+        </div>
+        <div id="savingsOutput">
+            <p>Enter your details to see how long it will take to hit your goal.</p>
+        </div>
     </div>
 
     <div class="container hidden" id="converterApp">
@@ -485,6 +510,7 @@
             const app = this.value;
             document.getElementById('wordleApp').classList.toggle('hidden', app !== 'wordle');
             document.getElementById('converterApp').classList.toggle('hidden', app !== 'converter');
+            document.getElementById('savingsApp').classList.toggle('hidden', app !== 'savings');
         });
 
         // Converter functions
@@ -507,6 +533,22 @@
             if (isNaN(val)) return;
             const result = val * 0.157473;
             document.getElementById('converterOutput').innerText = `${val} kg = ${result.toFixed(2)} stone`;
+        });
+
+        // Savings planner calculation
+        document.getElementById('calcSavingsBtn').addEventListener('click', function() {
+            const goal = parseFloat(document.getElementById('goalInput').value);
+            const income = parseFloat(document.getElementById('incomeInput').value);
+            const expense = parseFloat(document.getElementById('expenseInput').value);
+            if (isNaN(goal) || isNaN(income) || isNaN(expense)) return;
+            const monthly = income - expense;
+            const output = document.getElementById('savingsOutput');
+            if (monthly <= 0) {
+                output.innerText = 'Expenses exceed income. Adjust values.';
+                return;
+            }
+            const months = Math.ceil(goal / monthly);
+            output.innerText = `At $${monthly.toFixed(2)} saved per month, you'll reach your goal in ${months} months.`;
         });
     </script>
 </body>
